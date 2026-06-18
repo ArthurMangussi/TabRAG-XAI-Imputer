@@ -3,7 +3,7 @@ from sklearn.model_selection import StratifiedKFold
 from mdatagen.multivariate.mMAR import mMAR
 from utils.MyPreprocessing import PreprocessingDatasets
 from utils.MyResults import AnalysisResults
-from algorithms.rag_imputer import RAGImputer
+from tabrag_xai_imputer import RAGImputer
 
 # ── 1. Load your dataset ──────────────────────────────────────────────────────
 df = pd.read_csv("data/pima-indians-diabetes/pima_diabetes.csv")

@@ -25,14 +25,11 @@ Run
     python examples/quickstart_explain.py
 """
 
-import sys
-sys.path.append("./")
-
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from algorithms.rag_imputer import RAGImputer
+from tabrag_xai_imputer import RAGImputer
 
 # ---------------------------------------------------------------------------
 # 1. Load data
