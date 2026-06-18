@@ -35,7 +35,23 @@ Install with the extra(s) for your chosen LLM provider:
 
 ## API key configuration
 
-Set the relevant API key(s) in a `.env` file at the root of your project. Only the key(s) for the provider(s) you use are required.
+There are two ways to supply your API key.
+
+**Option 1 — pass it directly (recommended):**
+
+```python
+from tabrag_xai_imputer import RAGImputer
+
+imputer = RAGImputer(
+    llm_api="gemini",
+    llm_model_name="gemini-2.0-flash",
+    api_key="your_gemini_key_here",
+)
+```
+
+**Option 2 — `.env` file (fallback):**
+
+Place the relevant key(s) in a `.env` file at the root of your project. Only the key for the provider you use is required.
 
 ```env
 API_KEY_GEMINI=your_gemini_key_here
@@ -44,7 +60,7 @@ API_KEY_GPT=your_openai_key_here
 API_KEY_CLAUDE=your_anthropic_key_here
 ```
 
-The library loads `.env` automatically via `python-dotenv`. Alternatively, export the variables in your shell:
+The library loads `.env` automatically via `python-dotenv` whenever `api_key` is not set. Alternatively, export the variable in your shell:
 
 ```bash
 export API_KEY_GEMINI="your_gemini_key_here"

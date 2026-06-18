@@ -187,6 +187,10 @@ class RAGImputer(BaseEstimator, TransformerMixin):
         Rows per LLM call.
     min_complete_rows : int, default=1
         Minimum complete rows required in training data.
+    api_key : str or None, default=None
+        API key for the chosen LLM backend.  When *None*, the key is read
+        from the environment variable (``API_KEY_GEMINI``, ``API_KEY_GPT``,
+        ``API_KEY_OPEN_ROUTER``, or ``API_KEY_CLAUDE``) via a ``.env`` file.
     """
 
     _VALID_WEIGHTING = {"correlation", "uniform"}
@@ -200,6 +204,7 @@ class RAGImputer(BaseEstimator, TransformerMixin):
         dataset_name: str = "Unknown Dataset",
         llm_batch_size: int = 1,
         min_complete_rows: int = 1,
+        api_key: str | None = None,
     ) -> None:
         self.n_neighbors = n_neighbors
         self.feature_weighting = feature_weighting
@@ -208,6 +213,7 @@ class RAGImputer(BaseEstimator, TransformerMixin):
         self.dataset_name = dataset_name
         self.llm_batch_size = llm_batch_size
         self.min_complete_rows = min_complete_rows
+        self.api_key = api_key
 
     def _validate_params(self) -> None:
         if not isinstance(self.n_neighbors, int) or self.n_neighbors < 1:
@@ -328,13 +334,21 @@ class RAGImputer(BaseEstimator, TransformerMixin):
 
         load_dotenv()
 
+        _ENV_KEYS = {
+            "open_router": "API_KEY_OPEN_ROUTER",
+            "gpt": "API_KEY_GPT",
+            "gemini": "API_KEY_GEMINI",
+            "claude": "API_KEY_CLAUDE",
+        }
+        api_key = self.api_key or os.getenv(_ENV_KEYS.get(self.llm_api, ""))
+
         match self.llm_api:
             case "open_router":
                 from openai import OpenAI
 
                 client = OpenAI(
                     base_url="https://openrouter.ai/api/v1",
-                    api_key=os.getenv("API_KEY_OPEN_ROUTER"),
+                    api_key=api_key,
                 )
                 resp = client.responses.create(
                     model=self.llm_model_name,
@@ -346,7 +360,7 @@ class RAGImputer(BaseEstimator, TransformerMixin):
             case "gpt":
                 from openai import OpenAI
 
-                client = OpenAI(api_key=os.getenv("API_KEY_GPT"))
+                client = OpenAI(api_key=api_key)
                 resp = client.responses.create(
                     model=self.llm_model_name,
                     input=prompt,
@@ -358,7 +372,7 @@ class RAGImputer(BaseEstimator, TransformerMixin):
                 from google.genai import types
 
                 client = genai.Client(
-                    api_key=os.getenv("API_KEY_GEMINI"),
+                    api_key=api_key,
                     http_options={"timeout": 10 * 60 * 1000},
                 )
                 resp = client.models.generate_content(
@@ -374,7 +388,7 @@ class RAGImputer(BaseEstimator, TransformerMixin):
             case "claude":
                 import anthropic
 
-                client = anthropic.Anthropic(api_key=os.getenv("API_KEY_CLAUDE"))
+                client = anthropic.Anthropic(api_key=api_key)
                 resp = client.messages.create(
                     model=self.llm_model_name,
                     max_tokens=4096,
