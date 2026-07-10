@@ -9,6 +9,7 @@ import pandas as pd
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import MinMaxScaler
 from tabrag_xai_imputer import RAGImputer
+from mdatagen.multivariate.mMAR import mMAR
 
 df = pd.read_csv("data/pima-indians-diabetes/pima_diabetes.csv")
 X = df.drop(columns="target")
@@ -58,6 +59,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from tabrag_xai_imputer import RAGImputer
+from mdatagen.multivariate.mMCAR import mMCAR
 
 DATASET_NAME = "Pima Indians Diabetes"
 MISSING_RATE = 0.15
