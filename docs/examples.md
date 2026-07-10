@@ -26,11 +26,11 @@ for fold, (train_idx, test_idx) in enumerate(cv.split(X.values, y), start=1):
     X_test_norm  = pd.DataFrame(scaler.transform(X_test),  columns=X.columns)
 
     # Inject 30% MAR missing values
-    import numpy as np
-    rng = np.random.default_rng(fold)
-    X_test_missing = X_test_norm.copy()
-    mask = rng.random(X_test_missing.shape) < 0.30
-    X_test_missing[mask] = np.nan
+    X_test_missing = (
+        mMAR(X=X_test_norm, y=y[test_idx], n_xmiss=X_test_norm.shape[1])
+        .random(missing_rate=30)
+        .drop(columns="target")
+    )
 
     # Fit and impute
     imputer = RAGImputer(
@@ -71,13 +71,14 @@ X = df.select_dtypes(include="number").drop(
 X_train, X_test = train_test_split(X, test_size=0.1, random_state=RANDOM_STATE)
 
 # Inject MCAR missing values
-rng = np.random.default_rng(RANDOM_STATE)
-X_test_missing = X_test.copy()
-miss_mask = rng.random(X_test_missing.shape) < MISSING_RATE
-for i, row_mask in enumerate(miss_mask):
-    if row_mask.all():           # ensure at least one observed feature
-        row_mask[rng.integers(0, X_test_missing.shape[1])] = False
-    X_test_missing.iloc[i, row_mask] = np.nan
+generator = mMCAR(
+    X=X_test,
+    y=y_test,
+    missing_rate=int(MISSING_RATE * 100),
+    seed=RANDOM_STATE,
+)
+
+X_test_missing = generator.random()
 
 # Fit → impute → explain
 imputer = RAGImputer(
